@@ -1,5 +1,6 @@
 import graphics as graph
 import time as tm
+import copy as cp
 
 class point:
 	def __init__(self, x, y):
@@ -17,17 +18,18 @@ def distance(p1, p2):
 	return (((p1.getX()-p2.getX())**2+(p1.getY()-p2.getY())**2)**(1/2))
 
 def main():
-	pt = [point(3,  0), point( 3, 2), point( 5,  4), point( 5, 9),
-	      point(7,  2), point( 5, 7), point(10,  0), point( 5, 0),
-		  point(3, 10), point(10, 6), point( 9,  4), point(10, 5),
-		  point(11, 3)]
-		
-	#print(dst)
+
+	pt = [point( 1,  7), point(23, 17), point( 5,  6), point(13,  9),
+	      point( 6, 41), point(16, 37), point( 1,  8), point( 1,  0),
+		  point( 4, 31), point(11, 10), point( 3,  6), point( 7,  5),
+		  point(15, 22), point(20, 17)]
+	
+	# create graphics
 	
 	frame = graph.GraphWin("pather", 1200, 800, autoflush = False)
 	frame.setCoords(-1, len(pt)+1, len(pt)+2, -1)
 	
-	dst = []
+	dst = [] # table of distances (floats)
 	
 	for x in range(len(pt)):
 		dsttemp = []
@@ -35,7 +37,7 @@ def main():
 			dsttemp.append(distance(pt[x], pt[y]))
 		dst.append(dsttemp)
 		
-	dstfield = []
+	dstfield = [] # table of fields (rectangles)
 	
 	for x in range(len(pt)):
 		dstfieldtemp = []
@@ -48,7 +50,7 @@ def main():
 			dstfield[x][y].setFill("white") if x == y else dstfield[x][y].setFill("yellow")
 			dstfield[x][y].draw(frame)
 			
-	dstlabel = []
+	dstlabel = [] # table of labels (texts represeting <dst> (floats))
 			
 	for x in range(len(pt)):
 		dstlabeltemp = []
@@ -64,7 +66,7 @@ def main():
 			dstlabel[x][y].setSize(16)
 			dstlabel[x][y].draw(frame)
 			
-	dststate = []
+	dststate = [] # table of states (strings represented by fields colors)
 			
 	for x in range(len(pt)):
 		dststatetemp = []
@@ -72,7 +74,7 @@ def main():
 			dststatetemp.append("na") if x == y else dststatetemp.append("wait")
 		dststate.append(dststatetemp)
 		
-	statestext = []
+	statestext = [] # list of state descriptions (side texts)
 	
 	for y in range(len(pt)):
 		statestext.append(graph.Text(graph.Point(len(pt)+1, y+0.5), ""))
@@ -87,9 +89,12 @@ def main():
 	
 	# ---------------------------------------------------------------------------
 	
+	dststateBackup = cp.deepcopy(dststate)
+	
 	step = 0
 	
 	failflag = False
+	fineflag = True
 	
 	# quasi-macros
 	
@@ -118,9 +123,9 @@ def main():
 			statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
 			frame.update()
 			
-		#if (step == 64): break
-			
-		#tm.sleep(0.5)
+		#if (step > 110):
+		#	tm.sleep(2)
+		#if (step == 78): break
 		
 		# finish if all marked
 		
@@ -136,31 +141,61 @@ def main():
 		
 		# detect fail
 		
-		for x in range(len(pt)):
-			if (states[x][WAIT] + states[x][CONF] < 2):
-				failflag = True
-				break
+		if  not (failflag): # fail not (detected previously and being repaired)
+			for x in range(len(pt)):
+				if (states[x][WAIT] + states[x][CONF] < 2):
+					failflag = True
+					break
 			
-		if (failflag):
+		if (failflag): # recreate state from last saved backup (before removing biggest)
 			print("fail detected")
-			break
+			dststate = cp.deepcopy(dststateBackup)
+			if (fineflag == False): break
+			fineflag = False
+			
+			# recreate graphics
+			
+			for x in range(len(pt)):
+				waitno = 0
+				exclno = 0
+				confno = 0
+				for y in range(len(pt)):
+					# color the field
+					if (x == y): continue
+					if (dststate[x][y] == "wait"):
+						dstfield[x][y].setFill("yellow")
+					elif (dststate[x][y] == "conf"):
+						dstfield[x][y].setFill("green")
+					elif (dststate[x][y] == "excl"):
+						dstfield[x][y].setFill("red")
+					else: # programming error
+						print("The programmist f*cked up")
+					# modify the state summary
+					if (dststate[x][y] == "wait"): waitno += 1
+					elif (dststate[x][y] == "excl"): exclno += 1
+					elif (dststate[x][y] == "conf"): confno += 1
+				states.append((waitno, exclno, confno))
+				statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
+				frame.update()
+			# no break - let the biggest one be accepted instead of being removed
 		
 		# exclude if 2 joints found
 		
 		twojointflag = False
 		
-		for x in range(len(pt)):
-			if (twojointflag): break
-			if (states[x][WAIT] > 0 and states[x][CONF] == 2):
-				for y in range(len(pt)):
-					if (twojointflag): break
-					if (dststate[x][y] == "wait"):
-						dststate[x][y] = "excl"
-						dststate[y][x] = "excl"
-						dstfield[x][y].setFill("red")
-						dstfield[y][x].setFill("red")
-						frame.update()
-						twojointflag = True
+		if  not (failflag): # fail not detected previously and being repaired
+			for x in range(len(pt)):
+				if (twojointflag): break
+				if (states[x][WAIT] > 0 and states[x][CONF] == 2):
+					for y in range(len(pt)):
+						if (twojointflag): break
+						if (dststate[x][y] == "wait"):
+							dststate[x][y] = "excl"
+							dststate[y][x] = "excl"
+							dstfield[x][y].setFill("red")
+							dstfield[y][x].setFill("red")
+							frame.update()
+							twojointflag = True
 						
 		if (twojointflag):
 			print("two joints found")
@@ -170,17 +205,18 @@ def main():
 		
 		fillbreakflag = False
 		
-		for x in range(len(pt)):
-			if (fillbreakflag): break
-			if (states[x][WAIT] > 0 and states[x][EXCL] == len(pt) - 3):
-				for y in range(len(pt)):
-					if (dststate[x][y] == "wait"):
-						dststate[x][y] = "conf"
-						dststate[y][x] = "conf"
-						dstfield[x][y].setFill("green")
-						dstfield[y][x].setFill("green")
-						frame.update()
-						fillbreakflag = True
+		if  not (failflag): # fail not detected previously and being repaired
+			for x in range(len(pt)):
+				if (fillbreakflag): break
+				if (states[x][WAIT] > 0 and states[x][EXCL] == len(pt) - 3):
+					for y in range(len(pt)):
+						if (dststate[x][y] == "wait"):
+							dststate[x][y] = "conf"
+							dststate[y][x] = "conf"
+							dstfield[x][y].setFill("green")
+							dstfield[y][x].setFill("green")
+							frame.update()
+							fillbreakflag = True
 						
 		if (fillbreakflag):
 			print("row filled")
@@ -194,26 +230,44 @@ def main():
 			for y in range(len(pt)):
 				if (dststate[x][y] == "wait" and dst[x][y] > maxdist): maxdist = dst[x][y]
 		
-		# remove biggest
+		if  (failflag): # fail detected previously - to be repaired: accept biggest
+			exclflag = False
 	
-		exclflag = False
-	
-		for x in range(len(pt)):
-			if (exclflag): break
-			for y in range(len(pt)):
+			for x in range(len(pt)):
 				if (exclflag): break
-				if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
-					dstfield[x][y].setFill("red")
-					dstfield[y][x].setFill("red")
-					dststate[x][y] = "excl"
-					dststate[y][x] = "excl"
-					frame.update()
-					exclflag = True
-					
-		print("biggest number removed")
+				for y in range(len(pt)):
+					if (exclflag): break
+					if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
+						dstfield[x][y].setFill("green")
+						dstfield[y][x].setFill("green")
+						dststate[x][y] = "conf"
+						dststate[y][x] = "conf"
+						frame.update()
+						exclflag = True
+			failflag = False
+			print("biggest number accepted")
 	
-	if (failflag): print("Fail detected in step ", step)
-	else: print("Done")
+		else: # remove biggest
+			dststateBackup = cp.deepcopy(dststate)
+			fineflag = True
+			exclflag = False
+	
+			for x in range(len(pt)):
+				if (exclflag): break
+				for y in range(len(pt)):
+					if (exclflag): break
+					if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
+						dstfield[x][y].setFill("red")
+						dstfield[y][x].setFill("red")
+						dststate[x][y] = "excl"
+						dststate[y][x] = "excl"
+						frame.update()
+						exclflag = True
+					
+			print("biggest number removed")
+	
+	if not (fineflag): print("Failed in step ", step)
+	print("Done")
 	
 	frame.getMouse()
 	frame.close()
