@@ -102,6 +102,8 @@ def main():
 	EXCL = 1
 	CONF = 2
 	
+	probType = "trivial"
+	
 	while True:
 	
 		step += 1
@@ -149,8 +151,11 @@ def main():
 			
 		if (failflag): # recreate state from last saved backup (before removing biggest)
 			print("fail detected")
+			probType = "non-trivial"
 			dststate = cp.deepcopy(dststateBackup)
-			if (fineflag == False): break
+			if (fineflag == False):
+				probType = "fail"
+				break
 			fineflag = False
 			
 			# recreate graphics
@@ -268,6 +273,8 @@ def main():
 	
 	if not (fineflag): print("Failed in step ", step)
 	print("Done")
+	print()
+	print("Problem type:", probType)
 	
 	frame.getMouse()
 	frame.close()
