@@ -1,18 +1,14 @@
-import graphics as graph # for graphics (won't be needed finally)
-import time as tm        # for sleep() (won't be needed finally)
+import graphics as graph
+import time as tm
 import copy as cp
-import random as rand    # for testing random input (won't be needed finally)
-from timeit import default_timer as timer # for testing time  (will still remain useful, unnecessary though)
 
 class point:
 	def __init__(self, x, y):
 		self.x = float(x)
 		self.y = float(y)
 		
-	def __str__(self):
-		return (str(self.x) + ',' + str(self.y))
-		
-	__repr__ = __str__
+	def str(self):
+		return (self.x + ',' + self.y)
 		
 	def getX(self): return self.x
 	
@@ -20,37 +16,15 @@ class point:
 	
 def distance(p1, p2):
 	return (((p1.getX()-p2.getX())**2+(p1.getY()-p2.getY())**2)**(1/2))
-	
-def ssmall(lst):
-	lsttemp = sorted(lst)
-	return (lsttemp[2])
-	# second smallest distance is the third smallest element,
-	# because of 0 distance between the point and itself,
-	# which should not be considered
 
 def main():
 
-# ----------------------- CREATE TABLE OF POINTS ----------------------- #
-
-	# this example returns failure; it will be used for further improvement
-	pt = [point(21,  7), point(22, 17), point( 5,  6), point(13, 29),
-	      point( 6, 41), point(16, 37), point( 1,  8), point( 7,  0),
-		  point( 4, 21), point(11, 10), point( 3,  6), point( 7, 15),
-		  point(15, 22), point(21, 17)]
-		  
-	pointsNo = len(pt)
-
-#	pointsNo = rand.randint(10, 100)
-#	pt = []
-#	for i in range(pointsNo):
-#		pt.append(point(rand.random(), rand.random()))
+	pt = [point( 1,  7), point(23, 17), point( 5,  6), point(13,  9),
+	      point( 6, 41), point(16, 37), point( 1,  8), point( 1,  0),
+		  point( 4, 31), point(11, 10), point( 3,  6), point( 7,  5),
+		  point(15, 22), point(20, 17)]
 	
-	print("Preparing computation:")
-	print("Path consists of %d points" % pointsNo)
-	
-	startTime = timer()
-	
-# ---------------------- CREATE TABLE OF DISTANCES ---------------------- #
+	# create graphics
 	
 	frame = graph.GraphWin("pather", 1200, 800, autoflush = False)
 	frame.setCoords(-1, len(pt)+1, len(pt)+2, -1)
@@ -113,39 +87,7 @@ def main():
 			
 	frame.update()
 	
-# ------------------- PREREMOVE ALL OBVIOUS DISTANCES ------------------- #
-	
-	maxx = 0
-	tmplist = []
-	
-	for x in range(len(pt)):
-		tmplist.append(ssmall(dst[x]))
-		#print(tmplist)
-		maxx = max(tmplist)
-		
-	#print (maxx)
-		
-	for x in range(len(pt)):
-		for y in range(len(pt)):
-			if (dst[x][y] > maxx):
-				dststate[x][y] = "excl"
-				
-	# recreate graphics
-	
-	for x in range(len(pt)):
-		for y in range(len(pt)):
-			# color the field
-			if (x == y): continue
-			if (dststate[x][y] == "wait"):
-				dstfield[x][y].setFill("yellow")
-			elif (dststate[x][y] == "conf"):
-				dstfield[x][y].setFill("green")
-			elif (dststate[x][y] == "excl"):
-				dstfield[x][y].setFill("red")
-			else: # programming error
-				print("The programmist f*cked up")
-	
-# ----------------------- STORE THE CURRENT STATE ----------------------- #
+	# ---------------------------------------------------------------------------
 	
 	dststateBackup = cp.deepcopy(dststate)
 	
@@ -162,12 +104,10 @@ def main():
 	
 	probType = "trivial"
 	
-# ------------- PROCEED WITH THE MAIN PART OF THE ALGORITHM ------------- #
-	
 	while True:
 	
 		step += 1
-#		print("step ", step, end = ": ")
+		print("step ", step, end = ": ")
 
 		# check states
 		
@@ -185,11 +125,11 @@ def main():
 			statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
 			frame.update()
 			
-		#if (step > 20):
+		#if (step > 110):
 		#	tm.sleep(2)
 		#if (step == 78): break
 		
-# ----------- EVERY POINT HAS TWO DISTANCES CONFIRMED: SUCCESS ----------- #
+		# finish if all marked
 		
 		endflag = True
 		
@@ -201,22 +141,22 @@ def main():
 				
 		if (endflag): break
 		
-# ----------------------------- DETECT FAIL ----------------------------- #
+		# detect fail
 		
-		if  not (failflag): # no fail detected yet
+		if  not (failflag): # fail not (detected previously and being repaired)
 			for x in range(len(pt)):
 				if (states[x][WAIT] + states[x][CONF] < 2):
-					failflag = True # throw fail and proceed
+					failflag = True
 					break
 			
-		if (failflag): # fail detedted
-#			print("fail detected")
+		if (failflag): # recreate state from last saved backup (before removing biggest)
+			print("fail detected")
 			probType = "non-trivial"
-			dststate = cp.deepcopy(dststateBackup) # restore saved state
-			if (fineflag == False): # dead-end occured
-				probType = "fail" # treat as failed
+			dststate = cp.deepcopy(dststateBackup)
+			if (fineflag == False):
+				probType = "fail"
 				break
-			fineflag = False # no dead-end for now
+			fineflag = False
 			
 			# recreate graphics
 			
@@ -235,20 +175,20 @@ def main():
 						dstfield[x][y].setFill("red")
 					else: # programming error
 						print("The programmist f*cked up")
-					# recalculate the state summary
+					# modify the state summary
 					if (dststate[x][y] == "wait"): waitno += 1
 					elif (dststate[x][y] == "excl"): exclno += 1
 					elif (dststate[x][y] == "conf"): confno += 1
 				states.append((waitno, exclno, confno))
 				statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
 				frame.update()
-			# don't end the loop iteration yet; let the biggest one be accepted instead of being removed
-			
-# --------- TWO DISTANCES CONFIRMED: REMOVE ALL OTHERS (IF ANY) --------- #
+			# no break - let the biggest one be accepted instead of being removed
+		
+		# exclude if 2 joints found
 		
 		twojointflag = False
 		
-		if  not (failflag): # only if no previously detected fail is being repaired
+		if  not (failflag): # fail not detected previously and being repaired
 			for x in range(len(pt)):
 				if (twojointflag): break
 				if (states[x][WAIT] > 0 and states[x][CONF] == 2):
@@ -263,14 +203,14 @@ def main():
 							twojointflag = True
 						
 		if (twojointflag):
-#			print("two joints found")
+			print("two joints found")
 			continue
 		
-# ------------- TWO DISTANCES LEFT FOR A POINT: CONFIRM THEM ------------- #
+		# fill found
 		
 		fillbreakflag = False
 		
-		if  not (failflag): # only if no previously detected fail is being repaired
+		if  not (failflag): # fail not detected previously and being repaired
 			for x in range(len(pt)):
 				if (fillbreakflag): break
 				if (states[x][WAIT] > 0 and states[x][EXCL] == len(pt) - 3):
@@ -284,10 +224,10 @@ def main():
 							fillbreakflag = True
 						
 		if (fillbreakflag):
-#			print("row filled")
+			print("row filled")
 			continue
 		
-# ---------------------- FIND THE BIGGEST DISTANCE ---------------------- #
+		# find biggest
 	
 		maxdist = 0
 	
@@ -295,7 +235,7 @@ def main():
 			for y in range(len(pt)):
 				if (dststate[x][y] == "wait" and dst[x][y] > maxdist): maxdist = dst[x][y]
 		
-		if  (failflag): # fail detected previously - to be repaired: accept the biggest distance
+		if  (failflag): # fail detected previously - to be repaired: accept biggest
 			exclflag = False
 	
 			for x in range(len(pt)):
@@ -303,17 +243,17 @@ def main():
 				for y in range(len(pt)):
 					if (exclflag): break
 					if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
-						dststate[x][y] = "conf"
-						dststate[y][x] = "conf"
 						dstfield[x][y].setFill("green")
 						dstfield[y][x].setFill("green")
+						dststate[x][y] = "conf"
+						dststate[y][x] = "conf"
 						frame.update()
 						exclflag = True
 			failflag = False
-#			print("biggest number accepted")
+			print("biggest number accepted")
 	
-		else: # remove the biggest distance
-			dststateBackup = cp.deepcopy(dststate) # store current state
+		else: # remove biggest
+			dststateBackup = cp.deepcopy(dststate)
 			fineflag = True
 			exclflag = False
 	
@@ -322,32 +262,19 @@ def main():
 				for y in range(len(pt)):
 					if (exclflag): break
 					if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
-						dststate[x][y] = "excl"
-						dststate[y][x] = "excl"
 						dstfield[x][y].setFill("red")
 						dstfield[y][x].setFill("red")
+						dststate[x][y] = "excl"
+						dststate[y][x] = "excl"
 						frame.update()
 						exclflag = True
 					
-#			print("biggest number removed")
+			print("biggest number removed")
 	
 	if not (fineflag): print("Failed in step ", step)
-#	print("Done")
-#	print()
-
-	endTime = timer()
-
-	print("Problem type:", probType)
-	print("Time elapsed: %.3f seconds" % (endTime - startTime))
+	print("Done")
 	print()
-	res = open("types", 'a+')
-	res.write(str(pointsNo))
-	res.write('\t')
-	res.write(probType)
-	res.write('\t')
-	res.write(str(endTime-startTime))
-	res.write('\n')
-	res.close()
+	print("Problem type:", probType)
 	
 	frame.getMouse()
 	frame.close()
