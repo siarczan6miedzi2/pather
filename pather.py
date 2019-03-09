@@ -20,10 +20,14 @@ class point:
 	
 def distance(p1, p2):
 	return (((p1.getX()-p2.getX())**2+(p1.getY()-p2.getY())**2)**(1/2))
+	
+def ssmall(lst):
+	lsttemp = sorted(lst)
+	return (lsttemp[2]) # second smallest distance is the third smallest element, because of 0 distance between the point and itself, which should not be considered
 
 def main():
 
-#	pt = [point( 1,  8), point(23, 17), point( 5,  6), point(13,  9),
+#	pt = [point( 1,  7), point(23, 17), point( 5,  6), point(13,  9),
 #	      point( 6, 41), point(16, 37), point( 1,  8), point( 1,  0),
 #		  point( 4, 21), point(11, 10), point( 3,  6), point( 7,  5),
 #		  point(15, 22), point(20, 17)]
@@ -102,6 +106,36 @@ def main():
 #	frame.update()
 	
 	# ---------------------------------------------------------------------------
+	
+	maxx = 0
+	tmplist = []
+	
+	for x in range(len(pt)):
+		tmplist.append(ssmall(dst[x]))
+		#print(tmplist)
+		maxx = max(tmplist)
+		
+	#print (maxx)
+		
+	for x in range(len(pt)):
+		for y in range(len(pt)):
+			if (dst[x][y] > maxx):
+				dststate[x][y] = "excl"
+				
+	# recreate graphics
+	
+#	for x in range(len(pt)):
+#		for y in range(len(pt)):
+#			# color the field
+#			if (x == y): continue
+#			if (dststate[x][y] == "wait"):
+#				dstfield[x][y].setFill("yellow")
+#			elif (dststate[x][y] == "conf"):
+#				dstfield[x][y].setFill("green")
+#			elif (dststate[x][y] == "excl"):
+#				dstfield[x][y].setFill("red")
+#			else: # programming error
+#				print("The programmist f*cked up")
 	
 	dststateBackup = cp.deepcopy(dststate)
 	
