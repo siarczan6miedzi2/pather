@@ -21,10 +21,10 @@ class point:
 def distance(p1, p2):
 	return (((p1.getX()-p2.getX())**2+(p1.getY()-p2.getY())**2)**(1/2))
 	
-def ssmall(lst):
+def ssmall(lst, n):
 	lsttemp = sorted(lst)
-	return (lsttemp[2])
-	# second smallest distance is the third smallest element,
+	return (lsttemp[n])
+	# n-th smallest distance is the (n+1)-th smallest element,
 	# because of 0 distance between the point and itself,
 	# which should not be considered
 
@@ -33,12 +33,13 @@ def main():
 # --------------------------- CREATE TABLE OF POINTS --------------------------- #
 
 	# this set fails before the improvement
-#	pt = [point( 5, 17), point(23, 17), point( 5, 26), point(13,  9),
-#	      point( 6, 31), point(15, 37), point( 1, 18), point(51, 37),
-#		  point( 4, 21), point(11, 17), point( 3, 16), point( 7,  5),
-#		  point(15, 22), point(20, 17), point( 0,  0)]
-#
-#	pointsNo = len(pt)
+	#pt = [point(15,  7), point(13, 27), point(15, 26), point(23,  9),
+	 #     point(17, 21), point(12, 37), point(17, 18), point(11, 37)]
+		  #point( 4, 21), point(11, 17), point( 3, 16), point( 7,  5),
+		  #point(15, 22), point(20, 17), point( 0,  0)]
+
+	#pointsNo = len(pt)
+#	pointsNo = 8
 		  
 	pointsNo = rand.randint(10, 100)
 	pt = []
@@ -77,7 +78,7 @@ def main():
 #		for y in range(len(pt)):
 #			dstfield[x][y].setFill("white") if x == y else dstfield[x][y].setFill("yellow")
 #			dstfield[x][y].draw(frame)
-			
+		
 #	dstlabel = [] # table of labels (texts represeting <dst> (floats))
 #			
 #	for x in range(len(pt)):
@@ -114,245 +115,266 @@ def main():
 #		statestext[x].draw(frame)
 			
 #	frame.update()
-	
-# ---------------------- REMOVE OBVIOUS UNUSED DISTANCES ---------------------- #
-	
-	maxx = 0
-	tmplist = []
-	
-	for x in range(len(pt)):
-		tmplist.append(ssmall(dst[x]))
-		maxx = max(tmplist)
-		
-	for x in range(len(pt)):
-		for y in range(len(pt)):
-			if (dst[x][y] > maxx):
-				dststate[x][y] = "excl"
-				
-	# recreate graphics
-	
-#	for x in range(len(pt)):
-#		for y in range(len(pt)):
-#			# color the field
-#			if (x == y): continue
-#			if (dststate[x][y] == "wait"):
-#				dstfield[x][y].setFill("yellow")
-#			elif (dststate[x][y] == "conf"):
-#				dstfield[x][y].setFill("green")
-#			elif (dststate[x][y] == "excl"):
-#				dstfield[x][y].setFill("red")
-#			else: # programming error
-#				print("The programmist f*cked up")
-#				
-#	frame.update()
 
-# --------------------------- STORE THE CURRENT STATE --------------------------- #
-
-	dststateBackup = [] # here all encountered states will be stored
-				
-	dststateBackup.append(cp.deepcopy(dststate))
-	
-	step = 0
-	
-	failflag = False
-	fineflag = True
-	deadflag = False
-	
-	# quasi-macros
-	
-	WAIT = 0
-	EXCL = 1
-	CONF = 2
-	
 	probType = "trivial"
 
-# ----------------- PROCEED WITH THE MAIN PART OF THE ALGORITHM ----------------- #
+	for macroit in range(2, pointsNo-2):
 	
-	while True:
-	
-		step += 1
-#		print("step ", step, end = ": ")
+	# ---------------------------- RESTORE BLANK TABLE ---------------------------- #
 
-# ---------------------------- CHECK CURRENT STATES ---------------------------- #
-		
-		states = []
-		
 		for x in range(len(pt)):
-			waitno = 0
-			exclno = 0
-			confno = 0
 			for y in range(len(pt)):
-				if (dststate[x][y] == "wait"): waitno += 1
-				elif (dststate[x][y] == "excl"): exclno += 1
-				elif (dststate[x][y] == "conf"): confno += 1
-			states.append((waitno, exclno, confno))
-#			statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
+#				dstfield[x][y].setFill("white") if x == y else dstfield[x][y].setFill("yellow")
+				dststate[x][y] = "na" if x == y else "wait"
+#			statestext[x].setText(str(len(pt)-1) + " / 0 / 0")
 #			frame.update()
-			
-		#if (step > 110):
-		#	tm.sleep(2)
-		#if (step == 78): break
+	
+		if (macroit > 2):
+			#print("dupa")
+			probType = str(macroit)
+	
+	# ---------------------- REMOVE OBVIOUS UNUSED DISTANCES ---------------------- #
 		
-		# finish if all marked
-
-# ------------------- EVERY POINT HAS TWO DISTANCES: SUCCESS ------------------- #
-		
-		endflag = True
+		maxx = 0
+		tmplist = []
 		
 		for x in range(len(pt)):
-			if not (endflag): break
+			tmplist.append(ssmall(dst[x], macroit))
+			maxx = max(tmplist)
+			
+		for x in range(len(pt)):
 			for y in range(len(pt)):
-				if not (endflag): break
-				if (dststate[x][y] == "wait"): endflag = False
-				
-		if (endflag): break
+				if (dst[x][y] > maxx):
+					dststate[x][y] = "excl"
+					
+		# recreate graphics
 		
-# ------------------------------- DETECT FAILURE ------------------------------- #
+#		for x in range(len(pt)):
+#			for y in range(len(pt)):
+#				# color the field
+#				if (x == y): continue
+#				if (dststate[x][y] == "wait"):
+#					dstfield[x][y].setFill("yellow")
+#				elif (dststate[x][y] == "conf"):
+#					dstfield[x][y].setFill("green")
+#				elif (dststate[x][y] == "excl"):
+#					dstfield[x][y].setFill("red")
+#				else: # programming error
+#					print("The programmist f*cked up")
+#					
+#		frame.update()
+
+	# --------------------------- STORE THE CURRENT STATE --------------------------- #
+
+		dststateBackup = [] # here all encountered states will be stored
+					
+		dststateBackup.append(cp.deepcopy(dststate))
 		
-		if  not (failflag): # no fail has beed detected
-			for x in range(len(pt)):
-				if (states[x][WAIT] + states[x][CONF] < 2):
-					failflag = True
-					break
+		step = 0
+		
+		failflag = False
+		fineflag = True
+		deadflag = False
+		
+		# quasi-macros
+		
+		WAIT = 0
+		EXCL = 1
+		CONF = 2
+
+	# ----------------- PROCEED WITH THE MAIN PART OF THE ALGORITHM ----------------- #
+		
+		while True:
+		
+			step += 1
+			#print("step ", step, end = ": ") # HEREEE
+			#print(macroit)
+
+	# ---------------------------- CHECK CURRENT STATES ---------------------------- #
 			
-		if (failflag) and not (deadflag): # fail detected, but no so-previously-called dead-end
-		# if deadflag: only accept the biggest distance later in the loop
-#			print("fail detected")
-			probType = "non-trivial"
-			if (len(dststateBackup) == 0): # nothing possible to be restored
-				probType = "failed" # consider as fail
-				break
-			dststate = cp.deepcopy(dststateBackup.pop()) # restore the saved state
-			if (fineflag == False): # so-preciously-called dead-end reached
-				#probType = "fail" # treat as failure
-				#break
-				dststate = cp.deepcopy(dststateBackup.pop()) # restore the earlier state
-				deadflag = True
-				continue
-			fineflag = False
-			
-			# recreate graphics
+			states = []
 			
 			for x in range(len(pt)):
 				waitno = 0
 				exclno = 0
 				confno = 0
 				for y in range(len(pt)):
-#					# color the field
-#					if (x == y): continue
-#					if (dststate[x][y] == "wait"):
-#						dstfield[x][y].setFill("yellow")
-#					elif (dststate[x][y] == "conf"):
-#						dstfield[x][y].setFill("green")
-#					elif (dststate[x][y] == "excl"):
-#						dstfield[x][y].setFill("red")
-#					else: # programming error
-#						print("The programmist f*cked up")
-					# modify the state summary
 					if (dststate[x][y] == "wait"): waitno += 1
 					elif (dststate[x][y] == "excl"): exclno += 1
 					elif (dststate[x][y] == "conf"): confno += 1
 				states.append((waitno, exclno, confno))
 #				statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
 #				frame.update()
-			# don't end this loop iteration; let the biggest distance be accepted instead of being removed
-		
-# ----- TWO DISTANCES CONFIRMED FOR ONE POINT: REMOVE ALL WAITING (IF LEFT) ----- #
-		
-		twojointflag = False
-		
-		if  not (failflag): # no fail has been detected
+				
+			#tm.sleep(1)
+				
+			#if (step > 110):
+#			tm.sleep(1)
+			#if (step == 78): break
+			
+			# finish if all marked
+
+	# ------------------- EVERY POINT HAS TWO DISTANCES: SUCCESS ------------------- #
+			
+			endflag = True
+			
 			for x in range(len(pt)):
-				if (twojointflag): break
-				if (states[x][WAIT] > 0 and states[x][CONF] == 2):
-					for y in range(len(pt)):
-						if (twojointflag): break
-						if (dststate[x][y] == "wait"):
-							dststate[x][y] = "excl"
-							dststate[y][x] = "excl"
+				if not (endflag): break
+				for y in range(len(pt)):
+					if not (endflag): break
+					if (dststate[x][y] == "wait"): endflag = False
+					
+			if (endflag): break # success: exit the program
+			
+	# ------------------------------- DETECT FAILURE ------------------------------- #
+			
+			if  not (failflag): # no fail has beed detected
+				for x in range(len(pt)):
+					if (states[x][WAIT] + states[x][CONF] < 2):
+						failflag = True
+						break
+				
+			if (failflag) and not (deadflag): # fail detected, but no so-previously-called dead-end
+			# if deadflag: only accept the biggest distance later in the loop
+	#			print("fail detected")
+				if (macroit == 2): probType = "non-trivial"
+				if (len(dststateBackup) == 0): # nothing possible to be restored
+					if (macroit == 2): probType = "failed" # consider as fail
+					break # fail: exit this iteration: try with less strict begin
+				dststate = cp.deepcopy(dststateBackup.pop()) # restore the saved state
+				if (fineflag == False): # so-previously-called dead-end reached
+					#probType = "fail" # treat as failure
+					#break
+					dststate = cp.deepcopy(dststateBackup.pop()) # restore the earlier state
+					deadflag = True
+					continue
+				fineflag = False
+				
+				# recreate graphics
+				
+				for x in range(len(pt)):
+					waitno = 0
+					exclno = 0
+					confno = 0
+#					for y in range(len(pt)):
+#						# color the field
+#						if (x == y): continue
+#						if (dststate[x][y] == "wait"):
+#							dstfield[x][y].setFill("yellow")
+#						elif (dststate[x][y] == "conf"):
+#							dstfield[x][y].setFill("green")
+#						elif (dststate[x][y] == "excl"):
 #							dstfield[x][y].setFill("red")
-#							dstfield[y][x].setFill("red")
-#							frame.update()
-							twojointflag = True
-						
-		if (twojointflag):
-#			print("two joints found")
-			continue
+#						else: # programming error
+#							print("The programmist f*cked up")
+#						# modify the state summary
+#						if (dststate[x][y] == "wait"): waitno += 1
+#						elif (dststate[x][y] == "excl"): exclno += 1
+#						elif (dststate[x][y] == "conf"): confno += 1
+					states.append((waitno, exclno, confno))
+#					statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
+#					frame.update()
+				# don't end this loop iteration; let the biggest distance be accepted instead of being removed
+			
+	# ----- TWO DISTANCES CONFIRMED FOR ONE POINT: REMOVE ALL WAITING (IF LEFT) ----- #
+			
+			twojointflag = False
+			
+			if  not (failflag): # no fail has been detected
+				for x in range(len(pt)):
+					if (twojointflag): break
+					if (states[x][WAIT] > 0 and states[x][CONF] == 2):
+						for y in range(len(pt)):
+							if (twojointflag): break
+							if (dststate[x][y] == "wait"):
+								dststate[x][y] = "excl"
+								dststate[y][x] = "excl"
+#								dstfield[x][y].setFill("red")
+#								dstfield[y][x].setFill("red")
+#								frame.update()
+								twojointflag = True
+							
+			if (twojointflag):
+	#			print("two joints found")
+				continue
+			
+	# -------------- TWO POSSIBLE DISTANCES FOR A POINT: CONFIRM THEM -------------- #
+			
+			fillbreakflag = False
+			
+			if  not (failflag): # no fail has been detected
+				for x in range(len(pt)):
+					if (fillbreakflag): break
+					if (states[x][WAIT] > 0 and states[x][EXCL] == len(pt) - 3):
+						for y in range(len(pt)):
+							if (dststate[x][y] == "wait"):
+								dststate[x][y] = "conf"
+								dststate[y][x] = "conf"
+#								dstfield[x][y].setFill("green")
+#								dstfield[y][x].setFill("green")
+#								frame.update()
+								fillbreakflag = True
+							
+			if (fillbreakflag):
+	#			print("row filled")
+				continue
+			
+	# ------------------------- FIND THE BIGGEST DISTANCE ------------------------- #
 		
-# -------------- TWO POSSIBLE DISTANCES FOR A POINT: CONFIRM THEM -------------- #
+			maxdist = 0
 		
-		fillbreakflag = False
-		
-		if  not (failflag): # no fail has been detected
 			for x in range(len(pt)):
-				if (fillbreakflag): break
-				if (states[x][WAIT] > 0 and states[x][EXCL] == len(pt) - 3):
+				for y in range(len(pt)):
+					if (dststate[x][y] == "wait" and dst[x][y] > maxdist): maxdist = dst[x][y]
+			
+			if  (failflag): # fail has been detected - to be repaired: accept the biggest distance
+			# do if even if deadflag
+				exclflag = False
+		
+				for x in range(len(pt)):
+					if (exclflag): break
 					for y in range(len(pt)):
-						if (dststate[x][y] == "wait"):
+						if (exclflag): break
+						if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
 							dststate[x][y] = "conf"
 							dststate[y][x] = "conf"
 #							dstfield[x][y].setFill("green")
 #							dstfield[y][x].setFill("green")
 #							frame.update()
-							fillbreakflag = True
+							exclflag = True
+				failflag = False
+	#			print("biggest number accepted")
+		
+			else: # no fail - normal work - remove the biggest distance
+				dststateBackup.append(cp.deepcopy(dststate)) # save current state before proceeding
+				fineflag = True
+				exclflag = False
+		
+				for x in range(len(pt)):
+					if (exclflag): break
+					for y in range(len(pt)):
+						if (exclflag): break
+						if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
+							dststate[x][y] = "excl"
+							dststate[y][x] = "excl"
+#							dstfield[x][y].setFill("red")
+#							dstfield[y][x].setFill("red")
+#							frame.update()
+							exclflag = True
 						
-		if (fillbreakflag):
-#			print("row filled")
-			continue
+	#			print("biggest number removed")
+	
+		if (endflag): break
 		
-# ------------------------- FIND THE BIGGEST DISTANCE ------------------------- #
-	
-		maxdist = 0
-	
-		for x in range(len(pt)):
-			for y in range(len(pt)):
-				if (dststate[x][y] == "wait" and dst[x][y] > maxdist): maxdist = dst[x][y]
-		
-		if  (failflag): # fail has been detected - to be repaired: accept the biggest distance
-		# do if even if deadflag
-			exclflag = False
-	
-			for x in range(len(pt)):
-				if (exclflag): break
-				for y in range(len(pt)):
-					if (exclflag): break
-					if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
-						dststate[x][y] = "conf"
-						dststate[y][x] = "conf"
-#						dstfield[x][y].setFill("green")
-#						dstfield[y][x].setFill("green")
-#						frame.update()
-						exclflag = True
-			failflag = False
-#			print("biggest number accepted")
-	
-		else: # no fail - normal work - remove the biggest distance
-			dststateBackup.append(cp.deepcopy(dststate)) # save current state before proceeding
-			fineflag = True
-			exclflag = False
-	
-			for x in range(len(pt)):
-				if (exclflag): break
-				for y in range(len(pt)):
-					if (exclflag): break
-					if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
-						dststate[x][y] = "excl"
-						dststate[y][x] = "excl"
-#						dstfield[x][y].setFill("red")
-#						dstfield[y][x].setFill("red")
-#						frame.update()
-						exclflag = True
-					
-#			print("biggest number removed")
-	
-#	if not (fineflag): print("Failed in step ", step)
-#	print("Done")
-#	print()
+	#if not (fineflag): print("Failed in step ", step)
+	print("Done")
+	print()
 
 	endTime = timer()
 
 	print("Problem type:", probType)
 	print("Time elapsed: %.3f seconds" % (endTime - startTime))
+#	print(states)
 	print()
 	res = open("types", 'a+')
 	res.write(str(pointsNo))
