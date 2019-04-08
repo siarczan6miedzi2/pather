@@ -1,4 +1,3 @@
-#import graphics as graph # for graphics (won't be needed finally)
 import time as tm # for sleep() (won't be needed finally)
 import copy as cp
 import random as rand # for terting random maps (won't be needed finally)
@@ -41,7 +40,8 @@ def main():
 	#pointsNo = len(pt)
 #	pointsNo = 8
 		  
-	pointsNo = rand.randint(10, 100)
+	#pointsNo = rand.randint(10, 100)
+	pointsNo = 30
 	pt = []
 	for i in range(pointsNo):
 		pt.append(point(rand.random(), rand.random()))
@@ -55,8 +55,6 @@ def main():
 	
 # ------------------- CREATE TABLE OF DISTANCES AND GRAPHICS ------------------- #
 	
-#	frame = graph.GraphWin("pather", 1200, 800, autoflush = False)
-#	frame.setCoords(-1, len(pt)+1, len(pt)+2, -1)
 	
 	dst = [] # table of distances (floats)
 	
@@ -65,35 +63,6 @@ def main():
 		for y in range(len(pt)):
 			dsttemp.append(distance(pt[x], pt[y]))
 		dst.append(dsttemp)
-		
-#	dstfield = [] # table of fields (rectangles)
-#	
-#	for x in range(len(pt)):
-#		dstfieldtemp = []
-#		for y in range(len(pt)):
-#			dstfieldtemp.append(graph.Rectangle(graph.Point(x, y), graph.Point(x+1, y+1)))
-#		dstfield.append(dstfieldtemp)
-#		
-#	for x in range(len(pt)):
-#		for y in range(len(pt)):
-#			dstfield[x][y].setFill("white") if x == y else dstfield[x][y].setFill("yellow")
-#			dstfield[x][y].draw(frame)
-		
-#	dstlabel = [] # table of labels (texts represeting <dst> (floats))
-#			
-#	for x in range(len(pt)):
-#		dstlabeltemp = []
-#		for y in range(len(pt)):
-#			dstlabeltemp.append(graph.Text(graph.Point(x+0.5, y+0.5), ""))
-#		dstlabel.append(dstlabeltemp)
-#		
-#	for x in range(len(pt)):
-#		for y in range(len(pt)):
-#			dstlabel[x][y].setText("{0:.2f}".format(dst[x][y]))
-#			dstlabel[x][y].setFace('courier')
-#			dstlabel[x][y].setStyle('bold')
-#			dstlabel[x][y].setSize(16)
-#			dstlabel[x][y].draw(frame)
 			
 	dststate = [] # table of states (strings represented by fields colors)
 			
@@ -102,19 +71,6 @@ def main():
 		for y in range(len(pt)):
 			dststatetemp.append("na") if x == y else dststatetemp.append("wait")
 		dststate.append(dststatetemp)
-		
-#	statestext = [] # list of state descriptions (side texts)
-#	
-#	for y in range(len(pt)):
-#		statestext.append(graph.Text(graph.Point(len(pt)+1, y+0.5), ""))
-#		
-#	for x in range(len(pt)):
-#		statestext[x].setFace('arial')
-#		statestext[x].setStyle('bold')
-#		statestext[x].setSize(16)
-#		statestext[x].draw(frame)
-			
-#	frame.update()
 
 	probType = "trivial"
 
@@ -124,13 +80,9 @@ def main():
 
 		for x in range(len(pt)):
 			for y in range(len(pt)):
-#				dstfield[x][y].setFill("white") if x == y else dstfield[x][y].setFill("yellow")
 				dststate[x][y] = "na" if x == y else "wait"
-#			statestext[x].setText(str(len(pt)-1) + " / 0 / 0")
-#			frame.update()
 	
 		if (macroit > 2):
-			#print("dupa")
 			probType = str(macroit)
 	
 	# ---------------------- REMOVE OBVIOUS UNUSED DISTANCES ---------------------- #
@@ -146,23 +98,6 @@ def main():
 			for y in range(len(pt)):
 				if (dst[x][y] > maxx):
 					dststate[x][y] = "excl"
-					
-		# recreate graphics
-		
-#		for x in range(len(pt)):
-#			for y in range(len(pt)):
-#				# color the field
-#				if (x == y): continue
-#				if (dststate[x][y] == "wait"):
-#					dstfield[x][y].setFill("yellow")
-#				elif (dststate[x][y] == "conf"):
-#					dstfield[x][y].setFill("green")
-#				elif (dststate[x][y] == "excl"):
-#					dstfield[x][y].setFill("red")
-#				else: # programming error
-#					print("The programmist f*cked up")
-#					
-#		frame.update()
 
 	# --------------------------- STORE THE CURRENT STATE --------------------------- #
 
@@ -187,8 +122,6 @@ def main():
 		while True:
 		
 			step += 1
-			#print("step ", step, end = ": ") # HEREEE
-			#print(macroit)
 
 	# ---------------------------- CHECK CURRENT STATES ---------------------------- #
 			
@@ -203,16 +136,6 @@ def main():
 					elif (dststate[x][y] == "excl"): exclno += 1
 					elif (dststate[x][y] == "conf"): confno += 1
 				states.append((waitno, exclno, confno))
-#				statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
-#				frame.update()
-				
-			#tm.sleep(1)
-				
-			#if (step > 110):
-#			tm.sleep(1)
-			#if (step == 78): break
-			
-			# finish if all marked
 
 	# ------------------- EVERY POINT HAS TWO DISTANCES: SUCCESS ------------------- #
 			
@@ -235,45 +158,17 @@ def main():
 						break
 				
 			if (failflag) and not (deadflag): # fail detected, but no so-previously-called dead-end
-			# if deadflag: only accept the biggest distance later in the loop
-	#			print("fail detected")
 				if (macroit == 2): probType = "non-trivial"
 				if (len(dststateBackup) == 0): # nothing possible to be restored
 					if (macroit == 2): probType = "failed" # consider as fail
 					break # fail: exit this iteration: try with less strict begin
 				dststate = cp.deepcopy(dststateBackup.pop()) # restore the saved state
 				if (fineflag == False): # so-previously-called dead-end reached
-					#probType = "fail" # treat as failure
-					#break
 					dststate = cp.deepcopy(dststateBackup.pop()) # restore the earlier state
 					deadflag = True
 					continue
 				fineflag = False
-				
-				# recreate graphics
-				
-				for x in range(len(pt)):
-					waitno = 0
-					exclno = 0
-					confno = 0
-#					for y in range(len(pt)):
-#						# color the field
-#						if (x == y): continue
-#						if (dststate[x][y] == "wait"):
-#							dstfield[x][y].setFill("yellow")
-#						elif (dststate[x][y] == "conf"):
-#							dstfield[x][y].setFill("green")
-#						elif (dststate[x][y] == "excl"):
-#							dstfield[x][y].setFill("red")
-#						else: # programming error
-#							print("The programmist f*cked up")
-#						# modify the state summary
-#						if (dststate[x][y] == "wait"): waitno += 1
-#						elif (dststate[x][y] == "excl"): exclno += 1
-#						elif (dststate[x][y] == "conf"): confno += 1
-					states.append((waitno, exclno, confno))
-#					statestext[x].setText(str(waitno) + " / " + str(exclno) + " / " + str(confno))
-#					frame.update()
+
 				# don't end this loop iteration; let the biggest distance be accepted instead of being removed
 			
 	# ----- TWO DISTANCES CONFIRMED FOR ONE POINT: REMOVE ALL WAITING (IF LEFT) ----- #
@@ -289,13 +184,9 @@ def main():
 							if (dststate[x][y] == "wait"):
 								dststate[x][y] = "excl"
 								dststate[y][x] = "excl"
-#								dstfield[x][y].setFill("red")
-#								dstfield[y][x].setFill("red")
-#								frame.update()
 								twojointflag = True
 							
 			if (twojointflag):
-	#			print("two joints found")
 				continue
 			
 	# -------------- TWO POSSIBLE DISTANCES FOR A POINT: CONFIRM THEM -------------- #
@@ -310,13 +201,9 @@ def main():
 							if (dststate[x][y] == "wait"):
 								dststate[x][y] = "conf"
 								dststate[y][x] = "conf"
-#								dstfield[x][y].setFill("green")
-#								dstfield[y][x].setFill("green")
-#								frame.update()
 								fillbreakflag = True
 							
 			if (fillbreakflag):
-	#			print("row filled")
 				continue
 			
 	# ------------------------- FIND THE BIGGEST DISTANCE ------------------------- #
@@ -338,12 +225,8 @@ def main():
 						if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
 							dststate[x][y] = "conf"
 							dststate[y][x] = "conf"
-#							dstfield[x][y].setFill("green")
-#							dstfield[y][x].setFill("green")
-#							frame.update()
 							exclflag = True
 				failflag = False
-	#			print("biggest number accepted")
 		
 			else: # no fail - normal work - remove the biggest distance
 				dststateBackup.append(cp.deepcopy(dststate)) # save current state before proceeding
@@ -357,16 +240,10 @@ def main():
 						if (dst[x][y] == maxdist and dststate[x][y] == "wait"):
 							dststate[x][y] = "excl"
 							dststate[y][x] = "excl"
-#							dstfield[x][y].setFill("red")
-#							dstfield[y][x].setFill("red")
-#							frame.update()
 							exclflag = True
 						
-	#			print("biggest number removed")
-	
 		if (endflag): break
 		
-	#if not (fineflag): print("Failed in step ", step)
 	print("Done")
 	print()
 
@@ -374,7 +251,6 @@ def main():
 
 	print("Problem type:", probType)
 	print("Time elapsed: %.3f seconds" % (endTime - startTime))
-#	print(states)
 	print()
 	res = open("types", 'a+')
 	res.write(str(pointsNo))
@@ -384,8 +260,5 @@ def main():
 	res.write(str(endTime-startTime))
 	res.write('\n')
 	res.close()
-	
-#	frame.getMouse()
-#	frame.close()
 	
 if __name__ == "__main__": main()
