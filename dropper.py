@@ -1,7 +1,7 @@
 import os
 
 def main():
-	for i in range(5000):
+	for i in range(100):
 		print("+------------+\n| TEST %4d: |\n+------------+" % (i+1))
 		os.system("pather.py")
 
